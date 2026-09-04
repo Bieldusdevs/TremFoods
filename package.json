@@ -39,7 +39,7 @@
     "@types/nodemailer": "^6.4.15"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=18.17"
   },
   "allowScripts": {
     "@prisma/client@5.22.0": true,
