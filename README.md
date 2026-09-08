@@ -19,6 +19,8 @@ Pronto para deploy na Vercel.
 - Contas: registo, verificação de e-mail, início de sessão, recuperação de palavra-passe,
   gestão de sessões (terminar outras / todas)
 - Painel de administração com atualização de estados (refletida no cliente em segundos)
+- Gestão completa do cardápio no admin: produtos (foto por URL, descrição, preço, flags, disponibilidade),
+  categorias e adicionais por grupos (obrigatório/múltiplo, opções com preço extra; validados no servidor)
 - PWA instalável (manifest + service worker com cache e atualização automática), SEO completo
   (sitemap, robots, llms.txt, Open Graph, schema.org), segurança (CSP, CSRF, rate limiting,
   sanitação, auditoria)
@@ -62,7 +64,8 @@ npm run build && npm start     # Vercel: sem passos extra (build automático)
 
 ```bash
 # servidor em http://localhost:3000 e depois:
-node e2e/smoke.mjs   # E2E: cardápio → carrinho → registo → pedido → tracking → admin (usa Playwright)
+node e2e/smoke.mjs   # E2E: cardápio → carrinho (com adicionais) → registo → pedido → tracking → admin (usa Playwright)
+node e2e/shots-menu.mjs  # screenshots do produto com adicionais, carrinho e editor do cardápio
 ```
 
 A suíte assume `NODE_ENV=production` com SMTP desconfigurado (links de desenvolvimento

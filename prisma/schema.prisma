@@ -77,9 +77,10 @@ model Product {
   sort         Int      @default(0)
   createdAt    DateTime @default(now())
 
-  category  Category     @relation(fields: [categoryId], references: [id])
-  cartItems CartItem[]
-  orderItems OrderItem[]
+  category     Category       @relation(fields: [categoryId], references: [id])
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  optionGroups OptionGroup[]
 
   @@index([categoryId])
 }
@@ -93,15 +94,19 @@ model Cart {
 }
 
 model CartItem {
-  id        String  @id @default(cuid())
-  cartId    String
-  productId String
-  qty       Int     @default(1)
+  id          String   @id @default(cuid())
+  cartId      String
+  productId   String
+  qty         Int      @default(1)
+  // Chave da combinação de opções (ex.: "g1:o1|g2:o2"); vazio = sem opções.
+  // Permite a mesma linha de produto com escolhas diferentes (único por combinação).
+  optionsKey  String   @default("")
+  optionsJson Json?    // [{ itemId, name, priceCents }] — snapshot do momento da adição
 
   cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
 
-  @@unique([cartId, productId])
+  @@unique([cartId, productId, optionsKey])
 }
 
 model Order {
@@ -138,12 +143,14 @@ model Order {
 }
 
 model OrderItem {
-  id           String  @id @default(cuid())
-  orderId      String
-  productId    String?
-  nameSnapshot String
-  priceCents   Int
-  qty          Int
+  id            String  @id @default(cuid())
+  orderId       String
+  productId     String?
+  nameSnapshot  String
+  priceCents    Int
+  qty           Int
+  // [{ name, priceCents }] — adicionais escolhidos (imutável no histórico)
+  optionsJson   Json?
 
   order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id])
@@ -201,4 +208,35 @@ model PushSubscription {
 model Setting {
   key   String @id
   value String
+}
+
+// Grupo de adicionais de um produto (ex.: "Extras", "Ponto da carne").
+// required=true → o cliente tem de escolher; multiple=true → escolha múltipla
+// (com maxSelect opcional); false → uma opção (rádio).
+model OptionGroup {
+  id        String  @id @default(cuid())
+  productId String
+  name      String
+  required  Boolean @default(true)
+  multiple  Boolean @default(false)
+  maxSelect Int?
+  sort      Int     @default(0)
+
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options OptionItem[]
+
+  @@index([productId])
+}
+
+model OptionItem {
+  id         String  @id @default(cuid())
+  groupId    String
+  name       String
+  priceCents Int     @default(0)
+  available  Boolean @default(true)
+  sort       Int     @default(0)
+
+  group OptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
 }
