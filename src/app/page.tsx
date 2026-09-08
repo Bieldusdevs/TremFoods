@@ -14,29 +14,34 @@ export const metadata: Metadata = {
 };
 
 async function getProducts(): Promise<ProductView[]> {
-  const products = await prisma.product.findMany({
-    where: { available: true },
-    include: { category: { select: { id: true, name: true, slug: true, sort: true } }, _count: { select: { optionGroups: true } } },
-    orderBy: { sort: 'asc' },
-  });
-  return products
-    .sort((a, b) => a.category.sort - b.category.sort)
-    .map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    name: p.name,
-    description: p.description ?? '',
-    priceCents: p.priceCents,
-    image: p.image,
-    available: p.available,
-    isFeatured: p.isFeatured,
-    isNew: p.isNew,
-    isVegetarian: p.isVegetarian,
-    isSpicy: p.isSpicy,
-    category: p.category,
-    categoryId: p.categoryId,
-    hasOptions: p._count.optionGroups > 0,
-  }));
+  try {
+    const products = await prisma.product.findMany({
+      where: { available: true },
+      include: { category: { select: { id: true, name: true, slug: true, sort: true } }, _count: { select: { optionGroups: true } } },
+      orderBy: { sort: 'asc' },
+    });
+    return products
+      .sort((a, b) => (a.category?.sort ?? 0) - (b.category?.sort ?? 0))
+      .map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        description: p.description ?? '',
+        priceCents: p.priceCents,
+        image: p.image,
+        available: p.available,
+        isFeatured: p.isFeatured,
+        isNew: p.isNew,
+        isVegetarian: p.isVegetarian,
+        isSpicy: p.isSpicy,
+        category: p.category,
+        categoryId: p.categoryId,
+        hasOptions: (p._count?.optionGroups ?? 0) > 0,
+      }));
+  } catch (error) {
+    console.error('[HomePage] Error loading products:', error);
+    return [];
+  }
 }
 
 export default async function HomePage() {

@@ -24,7 +24,14 @@ export const metadata: Metadata = {
   description: SITE.description,
   applicationName: 'Trem Food',
   manifest: '/manifest.json',
-  icons: { icon: ['/icons/favicon.ico', '/icons/icon-192.png'], apple: '/icons/apple-touch-icon.png' },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icons/favicon.ico', sizes: 'any' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Trem Food' },
   formatDetection: { telephone: true },
   alternates: { canonical: '/' },

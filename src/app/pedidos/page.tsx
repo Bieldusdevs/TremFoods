@@ -19,12 +19,18 @@ export default async function OrdersPage() {
   const { user } = await requireUser();
   if (!user) redirect('/login?next=/pedidos');
 
-  const orders = await prisma.order.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-    include: { items: true },
-  });
+  let orders: any[] = [];
+  try {
+    orders = await prisma.order.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: { items: true },
+    });
+  } catch (err) {
+    console.error('[OrdersPage] Error loading orders:', err);
+    orders = [];
+  }
 
   return (
     <div className="container-app max-w-3xl py-8 sm:py-10">
@@ -55,7 +61,7 @@ export default async function OrdersPage() {
                       </span>
                     </div>
                     <p className="mt-1 text-[13px] text-muted">
-                      {dateTimePT(o.createdAt)} · {o.items.reduce((s, i) => s + i.qty, 0)} artigos · {o.deliveryMethod === 'DELIVERY' ? 'Entrega' : 'Levantamento'}
+                      {dateTimePT(o.createdAt)} · {(o.items || []).reduce((s: number, i: any) => s + i.qty, 0)} artigos · {o.deliveryMethod === 'DELIVERY' ? 'Entrega' : 'Levantamento'}
                     </p>
                   </div>
                   <span className="flex-none text-right">

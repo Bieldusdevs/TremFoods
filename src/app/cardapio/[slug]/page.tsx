@@ -13,10 +13,15 @@ export async function generateStaticParams() {
 }
 
 async function getProduct(slug: string) {
-  return prisma.product.findUnique({
-    where: { slug },
-    include: { category: true, optionGroups: { orderBy: { sort: 'asc' }, include: { options: { orderBy: { sort: 'asc' } } } } },
-  });
+  try {
+    return await prisma.product.findUnique({
+      where: { slug },
+      include: { category: true, optionGroups: { orderBy: { sort: 'asc' }, include: { options: { orderBy: { sort: 'asc' } } } } },
+    });
+  } catch (error) {
+    console.error('[ProductPage] Error loading product:', error);
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {

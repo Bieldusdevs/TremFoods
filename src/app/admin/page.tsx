@@ -21,18 +21,29 @@ export default async function AdminPage() {
   if (!user) redirect('/login?next=/admin');
   if (user.role !== 'ADMIN') redirect('/');
 
-  const [orders, products, status] = await Promise.all([
-    prisma.order.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-      include: { items: true, user: { select: { email: true } } },
-    }),
-    prisma.product.findMany({
-      orderBy: [{ category: { sort: 'asc' } }, { sort: 'asc' }],
-      include: { category: { select: { name: true } } },
-    }),
-    shopStatus(),
-  ]);
+  let orders: any[] = [];
+  let products: any[] = [];
+  let status = { open: false, manualClosed: false };
+
+  try {
+    const [dbOrders, dbProducts, dbStatus] = await Promise.all([
+      prisma.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+        include: { items: true, user: { select: { email: true } } },
+      }),
+      prisma.product.findMany({
+        orderBy: [{ category: { sort: 'asc' } }, { sort: 'asc' }],
+        include: { category: { select: { name: true } } },
+      }),
+      shopStatus(),
+    ]);
+    orders = dbOrders;
+    products = dbProducts;
+    status = dbStatus;
+  } catch (err) {
+    console.error('[AdminPage] Error loading admin data:', err);
+  }
 
   const statusLabel = status.open
     ? 'Aberto agora · fecha às 00h00'
@@ -70,7 +81,7 @@ export default async function AdminPage() {
             o.deliveryMethod === 'DELIVERY'
               ? [o.addressStreet, o.addressNumber, o.addressCity, o.addressPostal].filter(Boolean).join(', ')
               : 'Levantamento no balcão',
-          items: o.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, options: Array.isArray(i.optionsJson) ? (i.optionsJson as { name: string }[]).map((x) => x.name) : [] })),
+          items: o.items.map((i: any) => ({ name: i.nameSnapshot, qty: i.qty, options: Array.isArray(i.optionsJson) ? (i.optionsJson as { name: string }[]).map((x) => x.name) : [] })),
           createdAt: o.createdAt.toISOString(),
         }))}
       />

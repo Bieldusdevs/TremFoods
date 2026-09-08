@@ -44,27 +44,37 @@ export async function issueSession(userId: string, req: Request | null) {
 }
 
 export async function getSessionUser() {
-  const store = cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
-  const session = await prisma.session.findUnique({
-    where: { tokenHash: hashToken(token) },
-    include: { user: true },
-  });
-  if (!session || session.expiresAt < new Date() || session.user.emailVerifiedAt === null && false) return null;
-  // rolling: prolonga sessões ativas
-  if (Date.now() - session.lastSeen.getTime() > ROLLING_AFTER_MS) {
-    const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
-    await prisma.session.update({ where: { id: session.id }, data: { expiresAt, lastSeen: new Date() } });
-    return { ...session, expiresAt };
+  try {
+    const store = cookies();
+    const token = store.get(SESSION_COOKIE)?.value;
+    if (!token) return null;
+    const session = await prisma.session.findUnique({
+      where: { tokenHash: hashToken(token) },
+      include: { user: true },
+    });
+    if (!session || session.expiresAt < new Date()) return null;
+    // rolling: prolonga sessões ativas
+    if (Date.now() - session.lastSeen.getTime() > ROLLING_AFTER_MS) {
+      const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
+      await prisma.session.update({ where: { id: session.id }, data: { expiresAt, lastSeen: new Date() } }).catch(() => {});
+      return { ...session, expiresAt };
+    }
+    return session;
+  } catch (err) {
+    console.error('[Session] getSessionUser error:', err);
+    return null;
   }
-  return session;
 }
 
 export async function requireUser() {
-  const session = await getSessionUser();
-  if (!session) return { session: null, user: null };
-  return { session, user: session.user };
+  try {
+    const session = await getSessionUser();
+    if (!session) return { session: null, user: null };
+    return { session, user: session.user };
+  } catch (err) {
+    console.error('[Session] requireUser error:', err);
+    return { session: null, user: null };
+  }
 }
 
 export async function destroySession(token: string) {
