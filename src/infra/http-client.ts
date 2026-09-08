@@ -24,7 +24,7 @@ function invalidateCsrf() {
 
 export type ApiResult<T = Record<string, never>> = { ok: boolean; status: number; data: T & { error?: { code: string; message: string } } };
 
-async function mut<T = Record<string, never>>(method: 'POST' | 'PATCH' | 'DELETE', path: string, body?: unknown): Promise<ApiResult<T>> {
+async function mut<T = Record<string, never>>(method: 'POST' | 'PATCH' | 'PUT' | 'DELETE', path: string, body?: unknown): Promise<ApiResult<T>> {
   const token = await getCsrf();
   const res = await fetch(path, {
     method,
@@ -57,6 +57,9 @@ export function apiPost<T = Record<string, never>>(path: string, body?: unknown)
 }
 export function apiPatch<T = Record<string, never>>(path: string, body?: unknown) {
   return mut<T>('PATCH', path, body);
+}
+export function apiPut<T = Record<string, never>>(path: string, body?: unknown) {
+  return mut<T>('PUT', path, body);
 }
 export function apiDelete<T = Record<string, never>>(path: string, body?: unknown) {
   return mut<T>('DELETE', path, body);
