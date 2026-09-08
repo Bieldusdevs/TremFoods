@@ -10,6 +10,7 @@ import { getForUser } from '@/domains/orders/order-queries';
 import { nextOrderNumber } from '@/domains/orders/order-registry';
 import { LIFECYCLE } from '@/domains/orders/order-status';
 import { checkoutSchema } from '@/domains/orders/validators';
+import { orderBlockReason } from '@/domains/shop/shop-policy';
 import { eur } from '@/domains/shared-kernel/money';
 import { DELIVERY_MINUTES, PICKUP_MINUTES, deliveryFeeFor } from '@/domains/delivery/delivery-policy';
 import { paymentMethodLabel } from '@/domains/payment/methods';
@@ -56,6 +57,15 @@ export async function POST(req: Request) {
     return VALIDATION_ERROR(parsed.error.issues.map((i) => i.message).join(' • '));
   }
   const data = parsed.data;
+
+  // A cozinha tem horário: pedidos fora da janela ou com a loja encerrada são recusados.
+  const blockReason = await orderBlockReason();
+  if (blockReason) {
+    const message = blockReason === 'MANUAL'
+      ? 'Estamos temporariamente encerrados. Volte em breve — pode ligar para 964 994 787.'
+      : 'Estamos fechados de momento. Abrimos todos os dias às 06h30.';
+    return NextResponse.json({ error: { code: 'CLOSED', message } }, { status: 403 });
+  }
 
   // O carrinho vem SEMPRE do servidor — o total nunca é aceite do cliente.
   const cart = await loadBasket(user.id, null);

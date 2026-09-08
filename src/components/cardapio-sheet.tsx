@@ -4,21 +4,33 @@ import Link from 'next/link';
 import { Timer } from 'lucide-react';
 
 import { useState, useEffect } from 'react';
+import { withinOpeningHours } from '@/domains/shop/hours';
+import { apiGet } from '@/infra/http-client';
 
 /**
- * Faixa fina de horário/estado da loja (não é um elemento de marketing —
- * é informação operacional real: "Aberto / fecha" baseado no horário).
+ * Faixa fina com o estado real da loja: horário local + interrutor manual
+ * de encerramento (férias/avaria) vindo da API de estado.
  */
 export function CardapioSheet() {
   const [info, setInfo] = useState<{ open: boolean; label: string } | null>(null);
 
   useEffect(() => {
+    let manualClosed = false;
+    // O encerramento manual muda raramente: sincroniza no arranque e re-avalia a hora local.
+    apiGet<{ manualClosed: boolean }>('/api/shop-status')
+      .then((r) => {
+        if (r.ok) manualClosed = r.data.manualClosed;
+      })
+      .catch(() => {});
     const check = () => {
-      const now = new Date();
-      const mins = now.getHours() * 60 + now.getMinutes();
-      // Todos os dias, 06h30 – 00h00
-      const open = mins >= 390 && mins < 1440;
-      setInfo(open ? { open: true, label: 'Aberto agora · fecha às 00h00' } : { open: false, label: 'Fechado · abre às 06h30' });
+      const open = withinOpeningHours() && !manualClosed;
+      setInfo(
+        open
+          ? { open: true, label: 'Aberto agora · fecha às 00h00' }
+          : manualClosed
+            ? { open: false, label: 'Encerrado temporariamente' }
+            : { open: false, label: 'Fechado · abre às 06h30' },
+      );
     };
     check();
     const t = setInterval(check, 60_000);

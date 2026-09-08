@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Search, Loader2, PackageCheck } from 'lucide-react';
 import { StatusTimeline } from '@/components/status-timeline';
 import { apiGet } from '@/infra/http-client';
+import { PushToggle } from '@/domains/notifications/push-toggle';
 
 type TrackData = {
   number: string;
@@ -129,6 +130,7 @@ export function TrackingClient() {
           <div className="mt-6">
             <StatusTimeline status={data.status} deliveryMethod={data.deliveryMethod} events={data.events.map((e) => ({ status: e.status, at: e.at }))} />
           </div>
+          <PushToggle orderNumber={data.number} code={code.trim()} />
           <p className="mt-6 flex items-start gap-2 rounded-xl bg-paper px-3.5 py-3 text-[13px] leading-relaxed text-muted">
             <PackageCheck className="mt-0.5 h-4 w-4 flex-none text-accent" />
             <span>O estado é atualizado automaticamente pela cozinha. Se precisar de ajuda, ligue-nos: <span className="whitespace-nowrap font-semibold text-ink">964 994 787</span>.</span>

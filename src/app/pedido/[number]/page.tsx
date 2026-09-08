@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2, Loader2, Landmark, CreditCard, Smartphone, Ban
 import { cookies } from 'next/headers';
 import { StatusTimeline } from '@/components/status-timeline';
 import { OrderTracker } from './order-tracker';
+import { PushToggle } from '@/domains/notifications/push-toggle';
 import { requireUser, secrets } from '@/domains/account/session';
 import { LIFECYCLE } from '@/domains/orders/order-status';
 import { paymentMethodLabel } from '@/domains/payment/methods';
@@ -55,6 +56,7 @@ export default async function OrderDetailPage({ params }: { params: { number: st
           <OrderTracker number={order.number} initialStatus={order.status} deliveryMethod={delivery} />
         </div>
         <OrderTimelineView status={order.status} deliveryMethod={delivery} events={order.events} />
+        <PushToggle orderNumber={order.number} />
       </section>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">

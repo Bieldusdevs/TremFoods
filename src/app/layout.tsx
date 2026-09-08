@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { PwaRegister } from '@/components/pwa-register';
+import { InstallBanner } from '@/components/install-banner';
+import { CookieConsent } from '@/components/cookie-consent';
 import './globals.css';
 import { requireUser, secrets } from '@/domains/account/session';
 import { loadBasket, summarizeBasket } from '@/domains/basket/basket-store';
@@ -98,6 +100,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Header user={user ? { name: user.name, email: user.email, role: user.role } : null} cartCount={cartCount} />
         <main className="flex-1">{children}</main>
         <Footer />
+        <InstallBanner />
+        <CookieConsent />
       </body>
     </html>
   );

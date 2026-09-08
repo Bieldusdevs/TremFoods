@@ -33,10 +33,16 @@ export function CheckoutClient() {
   const [deliveryMethod, setDeliveryMethod] = useState<'DELIVERY' | 'PICKUP'>('DELIVERY');
   const [form, setForm] = useState({ customerName: '', customerPhone: '', customerEmail: '', addressStreet: '', addressNumber: '', addressCity: 'Almada', addressPostal: '', note: '' });
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
+  const [shopClosed, setShopClosed] = useState<'' | 'HOURS' | 'MANUAL'>('');
 
   useEffect(() => {
     (async () => {
-      const [c, m] = await Promise.all([apiGet<CartData>('/api/cart'), apiGet<Me>('/api/auth/me')]);
+      const [c, m, st] = await Promise.all([
+        apiGet<CartData>('/api/cart'),
+        apiGet<Me>('/api/auth/me'),
+        apiGet<{ open: boolean; manualClosed: boolean }>('/api/shop-status'),
+      ]);
+      if (st.ok && !st.data.open) setShopClosed(st.data.manualClosed ? 'MANUAL' : 'HOURS');
       if (c.ok) setCart(c.data);
       if (m.ok && m.data.user) {
         setMe(m.data);
@@ -75,6 +81,9 @@ export function CheckoutClient() {
           setError('Confirme o seu e-mail antes de fazer o pedido. <a href="/verificar" class="underline font-bold">Ver e-mail de confirmação</a>.');
         } else if (code === 'UNAUTHORIZED') {
           setError('A sua sessão expirou. Inicie sessão novamente e volte a este passo.');
+        } else if (code === 'CLOSED') {
+          setShopClosed(r.data.error?.message?.includes('encerrados') ? 'MANUAL' : 'HOURS');
+          setError(r.data.error?.message ?? 'Estamos fechados de momento.');
         } else {
           setError(r.data.error?.message ?? 'Não foi possível concluir o pedido. Tente novamente.');
         }
@@ -169,6 +178,17 @@ export function CheckoutClient() {
     <div className="container-app py-8 sm:py-10">
       <h1 className="font-display text-3xl font-extrabold tracking-tight">Finalizar pedido</h1>
       <p className="mt-1.5 text-sm text-muted">Entrega em {DELIVERY_MINUTES} min · Levantamento em {PICKUP_MINUTES} min</p>
+
+      {shopClosed && (
+        <div className="mt-6 rounded-2xl border border-danger/30 bg-paper px-4 py-3.5 text-sm">
+          <p className="font-semibold text-ink">Estamos fechados de momento</p>
+          <p className="mt-0.5 text-muted">
+            {shopClosed === 'MANUAL'
+              ? 'A loja está temporariamente encerrada. Volte em breve ou ligue 964 994 787.'
+              : 'Abrimos todos os dias às 06h30. Pode deixar o carrinho guardado e voltar mais tarde.'}
+          </p>
+        </div>
+      )}
 
       <form onSubmit={submit} className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
         <div className="space-y-8">
@@ -300,7 +320,7 @@ export function CheckoutClient() {
 
           {error && <p className="mt-4 rounded-xl bg-danger/10 px-3.5 py-3 text-[13px] font-medium text-danger" dangerouslySetInnerHTML={{ __html: error }} />}
 
-          <button type="submit" disabled={busy} className="btn-primary mt-5 w-full">
+          <button type="submit" disabled={busy || !!shopClosed} className="btn-primary mt-5 w-full">
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> A processar…</> : <>Confirmar pedido <ArrowRight className="h-4 w-4" /></>}
           </button>
           <p className="mt-3 text-center text-[11px] leading-relaxed text-muted">
