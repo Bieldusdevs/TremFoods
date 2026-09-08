@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: { serverComponentsExternalPackages: ['web-push'] },
   images: { unoptimized: true },
   async headers() {
     const csp = [
