@@ -7,7 +7,8 @@ import { eur } from '@/domains/shared-kernel/money';
 import { apiGet, apiPatch, apiDelete, emitCartChange } from '@/infra/http-client';
 import { DELIVERY_FEE_CENTS, FREE_DELIVERY_FROM_CENTS } from '@/domains/delivery/delivery-policy';
 
-type CartItem = { id: string; qty: number; product: { id: string; slug: string; name: string; priceCents: number; image: string; available: boolean } };
+type CartOption = { itemId: string; name: string; priceCents: number };
+type CartItem = { id: string; qty: number; unitPriceCents: number; options: CartOption[]; product: { id: string; slug: string; name: string; priceCents: number; image: string; available: boolean } };
 type CartData = { count: number; subtotalCents: number; items: CartItem[] };
 
 export function CartClient() {
@@ -31,11 +32,11 @@ export function CartClient() {
     return () => window.removeEventListener('basket:changed', load);
   }, [load]);
 
-  const setQty = async (productId: string, qty: number) => {
+  const setQty = async (itemId: string, qty: number) => {
     if (qty < 1 || busyId) return;
-    setBusyId(productId);
+    setBusyId(itemId);
     try {
-      const r = await apiPatch('/api/cart', { productId, qty });
+      const r = await apiPatch('/api/cart', { itemId, qty });
       if (r.ok) {
         setCart((c) => c ? { ...c, ...r.data } : c);
         emitCartChange();
@@ -120,6 +121,11 @@ export function CartClient() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
+                {i.options.length > 0 && (
+                  <p className="mt-1 text-xs leading-relaxed text-muted">
+                    {i.options.map((o) => `${o.name}${o.priceCents > 0 ? ` (+${eur(o.priceCents)})` : ''}`).join(' · ')}
+                  </p>
+                )}
                 {!i.product.available && (
                   <p className="mt-1 inline-flex w-fit rounded-md bg-danger/10 px-2 py-0.5 text-xs font-semibold text-danger">
                     Indisponível — remova ou ajuste o pedido
@@ -127,15 +133,15 @@ export function CartClient() {
                 )}
                 <div className="mt-auto flex items-center justify-between pt-3">
                   <div className="flex items-center rounded-xl border border-line">
-                    <button onClick={() => setQty(i.product.id, i.qty - 1)} disabled={busyId === i.id || !i.product.available} className="p-2.5 text-ink/60 hover:text-ink disabled:opacity-40" aria-label="Diminuir">
+                    <button onClick={() => setQty(i.id, i.qty - 1)} disabled={busyId === i.id || !i.product.available} className="p-2.5 text-ink/60 hover:text-ink disabled:opacity-40" aria-label="Diminuir">
                       <Minus className="h-3.5 w-3.5" />
                     </button>
                     <span className="w-8 text-center text-sm font-semibold">{i.qty}</span>
-                    <button onClick={() => setQty(i.product.id, i.qty + 1)} disabled={busyId === i.id || !i.product.available} className="p-2.5 text-ink/60 hover:text-ink disabled:opacity-40" aria-label="Aumentar">
+                    <button onClick={() => setQty(i.id, i.qty + 1)} disabled={busyId === i.id || !i.product.available} className="p-2.5 text-ink/60 hover:text-ink disabled:opacity-40" aria-label="Aumentar">
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <span className="text-[15px] font-bold">{eur(i.product.priceCents * i.qty)}</span>
+                  <span className="text-[15px] font-bold">{eur(i.unitPriceCents * i.qty)}</span>
                 </div>
               </div>
             </li>

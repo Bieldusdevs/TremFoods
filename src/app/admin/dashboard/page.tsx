@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
             o.deliveryMethod === 'DELIVERY'
               ? [o.addressStreet, o.addressNumber, o.addressCity, o.addressPostal].filter(Boolean).join(', ')
               : 'Levantamento no balcão',
-          items: o.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty })),
+          items: o.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, options: Array.isArray(i.optionsJson) ? (i.optionsJson as { name: string }[]).map((x) => x.name) : [] })),
           createdAt: o.createdAt.toISOString(),
         }))}
       />

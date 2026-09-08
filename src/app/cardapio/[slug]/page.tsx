@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Leaf, Flame, Clock, Bike, ShoppingBag } from 'lucide-react';
 import { AddToCart } from '@/components/add-to-cart';
+import { ProductPurchase } from './product-purchase';
 import { prisma } from '@/infra/db';
 import { eur } from '@/domains/shared-kernel/money';
 import { DELIVERY_MINUTES, PICKUP_MINUTES } from '@/domains/delivery/delivery-policy';
@@ -12,7 +13,10 @@ export async function generateStaticParams() {
 }
 
 async function getProduct(slug: string) {
-  return prisma.product.findUnique({ where: { slug }, include: { category: true } });
+  return prisma.product.findUnique({
+    where: { slug },
+    include: { category: true, optionGroups: { orderBy: { sort: 'asc' }, include: { options: { orderBy: { sort: 'asc' } } } } },
+  });
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -59,7 +63,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
           </div>
 
           <div className="mt-7">
-            <AddToCart productId={product.id} />
+            {product.optionGroups.length > 0 ? (
+              <ProductPurchase productId={product.id} basePriceCents={product.priceCents} groups={product.optionGroups} />
+            ) : (
+              <AddToCart productId={product.id} />
+            )}
           </div>
 
           <dl className="mt-8 grid gap-3 border-t border-line pt-6 text-sm sm:grid-cols-2">

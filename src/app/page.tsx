@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 async function getProducts(): Promise<ProductView[]> {
   const products = await prisma.product.findMany({
     where: { available: true },
-    include: { category: { select: { id: true, name: true, slug: true, sort: true } } },
+    include: { category: { select: { id: true, name: true, slug: true, sort: true } }, _count: { select: { optionGroups: true } } },
     orderBy: { sort: 'asc' },
   });
   return products
@@ -35,6 +35,7 @@ async function getProducts(): Promise<ProductView[]> {
     isSpicy: p.isSpicy,
     category: p.category,
     categoryId: p.categoryId,
+    hasOptions: p._count.optionGroups > 0,
   }));
 }
 

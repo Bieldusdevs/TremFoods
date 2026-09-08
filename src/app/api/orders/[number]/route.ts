@@ -30,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: { number: string 
     address: order.deliveryMethod === 'DELIVERY'
       ? { street: order.addressStreet, number: order.addressNumber, city: order.addressCity, postal: order.addressPostal }
       : null,
-    items: order.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, priceCents: i.priceCents })),
+    items: order.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, priceCents: i.priceCents, options: Array.isArray(i.optionsJson) ? i.optionsJson : [] })),
     events: order.events.map((e) => ({ status: e.status, label: LIFECYCLE[e.status]?.label ?? e.status, note: e.note, at: e.createdAt })),
     createdAt: order.createdAt,
   });

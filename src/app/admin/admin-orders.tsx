@@ -21,7 +21,7 @@ type OrderView = {
   customerEmail: string;
   note: string | null;
   addressLine: string;
-  items: { name: string; qty: number }[];
+  items: { name: string; qty: number; options: string[] }[];
   createdAt: string;
 };
 

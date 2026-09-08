@@ -21,7 +21,7 @@ type OrderRow = {
   customerEmail: string;
   note: string | null;
   addressLine: string;
-  items: { name: string; qty: number }[];
+  items: { name: string; qty: number; options: string[] }[];
   createdAt: string;
 };
 
@@ -153,7 +153,7 @@ export function MetricsDashboard({ summaries, series, orders, monthLabel }: {
                     <div className="pb-4 pl-4 text-sm">
                       <ul className="space-y-1 text-muted">
                         {o.items.map((i, idx) => (
-                          <li key={idx}><span className="font-semibold text-ink">{i.qty}×</span> {i.name}</li>
+                          <li key={idx}><span className="font-semibold text-ink">{i.qty}×</span> {i.name}{i.options.length ? <span className="text-muted"> — {i.options.join(' · ')}</span> : null}</li>
                         ))}
                       </ul>
                       <p className="mt-2 flex items-center gap-1.5 text-muted">

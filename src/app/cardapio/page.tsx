@@ -14,7 +14,7 @@ export default async function CardapioPage() {
   const products: ProductView[] = await prisma.product
     .findMany({
       where: { available: true },
-      include: { category: { select: { id: true, name: true, slug: true, sort: true } } },
+      include: { category: { select: { id: true, name: true, slug: true, sort: true } }, _count: { select: { optionGroups: true } } },
       orderBy: { sort: 'asc' },
     })
     .then((rows) =>
@@ -32,6 +32,7 @@ export default async function CardapioPage() {
         isSpicy: p.isSpicy,
         category: p.category,
         categoryId: p.categoryId,
+        hasOptions: p._count.optionGroups > 0,
       })),
     );
 

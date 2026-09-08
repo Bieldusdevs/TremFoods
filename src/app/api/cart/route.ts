@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { requireUser, verifyCsrf, secrets, cookieOptions, newBasketToken } from '@/domains/account/session';
+import { prisma } from '@/infra/db';
 import { loadBasket, summarizeBasket, addItem, setItemQuantity } from '@/domains/basket/basket-store';
-import { parseJson, VALIDATION_ERROR } from '@/infra/api-reply';
+import { requireUser, verifyCsrf, secrets, cookieOptions, newBasketToken } from '@/domains/account/session';
 import { addItemSchema, setItemSchema } from '@/domains/basket/validators';
 import { logValidation } from '@/infra/logging';
-import { prisma } from '@/infra/db';
+import { parseJson, VALIDATION_ERROR } from '@/infra/api-reply';
+import { unitPriceCents } from '@/domains/menu/options';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,8 @@ export async function GET() {
     items: cart.items.map((i) => ({
       id: i.id,
       qty: i.qty,
+      unitPriceCents: unitPriceCents(i.product.priceCents, i.options),
+      options: i.options,
       product: {
         id: i.product.id,
         slug: i.product.slug,
@@ -46,19 +49,22 @@ export async function POST(req: Request) {
     logValidation(parsed.error);
     return VALIDATION_ERROR(parsed.error.issues.map((i) => i.message).join(' • '));
   }
-  const { productId, qty } = parsed.data;
-  const product = await prisma.product.findUnique({ where: { id: productId }, select: { available: true } });
-  if (!product || !product.available) return NextResponse.json({ error: { code: 'NOT_FOUND', message: 'Produto indisponível.' } }, { status: 404 });
+  const { productId, qty, options } = parsed.data;
 
   const { user } = await requireUser();
   const cartToken = user ? null : cartTokenOrNew();
-  await addItem(user?.id ?? null, cartToken, productId, qty);
+  const result = await addItem(user?.id ?? null, cartToken, productId, qty, options ?? []);
+  if (result.error) {
+    return NextResponse.json({ error: { code: 'INVALID_OPTION', message: result.error } }, { status: 400 });
+  }
   const cart = await loadBasket(user?.id ?? null, cartToken);
   const res = NextResponse.json({ ok: true, ...summarizeBasket(cart) });
   if (!user && cartToken) res.cookies.set(secrets.CART_COOKIE, cartToken, { ...cookieOptions, maxAge: 60 * 60 * 24 * 90 });
   return res;
 }
 
+// Quantidade por linha (o id da linha identifica o produto + combinação de
+// opções — duas linhas do mesmo produto com escolhas diferentes são distintas).
 export async function PATCH(req: Request) {
   if (!verifyCsrf(req)) return NextResponse.json({ error: { code: 'CSRF', message: 'Token de segurança inválido.' } }, { status: 403 });
   const body = await parseJson(req);
@@ -67,14 +73,12 @@ export async function PATCH(req: Request) {
     logValidation(parsed.error);
     return VALIDATION_ERROR(parsed.error.issues.map((i) => i.message).join(' • '));
   }
-  const { productId, qty } = parsed.data;
+  const { itemId, qty } = parsed.data;
   const { user } = await requireUser();
-  const cartToken = user ? null : cartTokenOrNew();
-  await setItemQuantity(user?.id ?? null, cartToken, productId, qty);
+  const cartToken = cookies().get(secrets.CART_COOKIE)?.value ?? null;
+  await setItemQuantity(itemId, qty);
   const cart = await loadBasket(user?.id ?? null, cartToken);
-  const res = NextResponse.json({ ok: true, ...summarizeBasket(cart) });
-  if (!user && cartToken) res.cookies.set(secrets.CART_COOKIE, cartToken, { ...cookieOptions, maxAge: 60 * 60 * 24 * 90 });
-  return res;
+  return NextResponse.json({ ok: true, ...summarizeBasket(cart) });
 }
 
 export async function DELETE(req: Request) {

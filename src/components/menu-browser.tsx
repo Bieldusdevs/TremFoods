@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Search, X, Flame, Leaf, Timer } from 'lucide-react';
+import Link from 'next/link';
+import { Search, X, Flame, Leaf, Timer, Plus } from 'lucide-react';
 import { AddToCart } from './add-to-cart';
 import { eur } from '@/domains/shared-kernel/money';
 
@@ -19,6 +20,8 @@ export type ProductView = {
   isSpicy: boolean;
   category: { id: string; name: string; slug: string; sort: number };
   categoryId: string;
+  // Produtos com adicionais obrigatórios não podem usar o botão rápido.
+  hasOptions: boolean;
 };
 
 /**
@@ -157,7 +160,15 @@ function MenuCard({ p }: { p: ProductView }) {
         <p className="mt-1.5 line-clamp-2 flex-1 text-[13px] leading-relaxed text-muted">{p.description}</p>
         <div className="mt-4 flex items-center justify-between gap-2">
           <span className="text-[15px] font-bold">{eur(p.priceCents)}</span>
-          {p.available ? <AddToCart productId={p.id} variant="compact" /> : <Timer className="h-4 w-4 text-muted/40" />}
+          {p.hasOptions && p.available ? (
+            <Link href={`/cardapio/${p.slug}`} aria-label="Ver opções" className="rounded-xl bg-accent p-2.5 text-accent-ink hover:bg-accent-hover">
+              <Plus className="h-4 w-4" />
+            </Link>
+          ) : p.available ? (
+            <AddToCart productId={p.id} variant="compact" />
+          ) : (
+            <Timer className="h-4 w-4 text-muted/40" />
+          )}
         </div>
       </div>
     </article>

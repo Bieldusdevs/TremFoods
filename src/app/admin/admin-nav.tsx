@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { ListOrdered, BarChart3 } from 'lucide-react';
+import { ListOrdered, BarChart3, UtensilsCrossed } from 'lucide-react';
 
 const TABS = [
   { id: 'orders', href: '/admin', label: 'Pedidos', Icon: ListOrdered },
   { id: 'metrics', href: '/admin/dashboard', label: 'Métricas', Icon: BarChart3 },
+  { id: 'menu', href: '/admin/menu', label: 'Cardápio', Icon: UtensilsCrossed },
 ] as const;
 
-export function AdminNav({ active }: { active: 'orders' | 'metrics' }) {
+export function AdminNav({ active }: { active: 'orders' | 'metrics' | 'menu' }) {
   return (
     <nav className="mt-5 flex gap-1.5" aria-label="Secções do painel">
       {TABS.map(({ id, href, label, Icon }) => (

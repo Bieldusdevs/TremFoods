@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { Flame, Leaf } from 'lucide-react';
+import { Flame, Leaf, Plus } from 'lucide-react';
 import { AddToCart } from './add-to-cart';
 import type { Product } from '@prisma/client';
 import { eur } from '@/domains/shared-kernel/money';
 import { prisma } from '@/infra/db';
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, hasOptions = false }: { product: Product; hasOptions?: boolean }) {
   return (
     <article className="card group flex flex-col overflow-hidden">
       <Link href={`/cardapio/${product.slug}`} className="relative block aspect-[4/3] overflow-hidden bg-[#EFECE5]">
@@ -33,7 +33,13 @@ export function ProductCard({ product }: { product: Product }) {
         <p className="mt-1.5 line-clamp-2 flex-1 text-[13px] leading-relaxed text-muted">{product.description}</p>
         <div className="mt-4 flex items-center justify-between gap-2">
           <span className="text-[15px] font-bold">{eur(product.priceCents)}</span>
-          <AddToCart productId={product.id} variant="compact" />
+          {hasOptions ? (
+            <Link href={`/cardapio/${product.slug}`} aria-label="Ver opções" className="rounded-xl bg-accent p-2.5 text-accent-ink hover:bg-accent-hover">
+              <Plus className="h-4 w-4" />
+            </Link>
+          ) : (
+            <AddToCart productId={product.id} variant="compact" />
+          )}
         </div>
       </div>
     </article>

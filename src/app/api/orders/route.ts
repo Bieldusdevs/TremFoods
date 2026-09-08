@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { cookies } from 'next/headers';
 import { requireUser, verifyCsrf, secrets } from '@/domains/account/session';
 import { loadBasket, summarizeBasket, clearBasket } from '@/domains/basket/basket-store';
@@ -10,6 +11,7 @@ import { getForUser } from '@/domains/orders/order-queries';
 import { nextOrderNumber } from '@/domains/orders/order-registry';
 import { LIFECYCLE } from '@/domains/orders/order-status';
 import { checkoutSchema } from '@/domains/orders/validators';
+import { unitPriceCents } from '@/domains/menu/options';
 import { orderBlockReason } from '@/domains/shop/shop-policy';
 import { eur } from '@/domains/shared-kernel/money';
 import { DELIVERY_MINUTES, PICKUP_MINUTES, deliveryFeeFor } from '@/domains/delivery/delivery-policy';
@@ -108,8 +110,10 @@ export async function POST(req: Request) {
           create: cart.items.map((i) => ({
             productId: i.product.id,
             nameSnapshot: i.product.name,
-            priceCents: i.product.priceCents,
+            // Preço unitário inclui os adicionais — snapshot, nunca recalculado.
+            priceCents: unitPriceCents(i.product.priceCents, i.options),
             qty: i.qty,
+            optionsJson: i.options.length ? (i.options as Prisma.InputJsonValue) : undefined,
           })),
         },
         events: { create: { status: 'RECEIVED', note: 'Pedido recebido com sucesso.' } },

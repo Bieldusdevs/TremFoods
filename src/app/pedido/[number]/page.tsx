@@ -65,7 +65,14 @@ export default async function OrderDetailPage({ params }: { params: { number: st
           <ul className="mt-3 divide-y divide-line text-sm">
             {order.items.map((i) => (
               <li key={i.id} className="flex justify-between gap-3 py-2.5">
-                <span className="text-muted"><span className="font-semibold text-ink">{i.qty}×</span> {i.nameSnapshot}</span>
+                <span className="text-muted">
+                  <span className="font-semibold text-ink">{i.qty}×</span> {i.nameSnapshot}
+                  {Array.isArray(i.optionsJson) && (i.optionsJson as { name: string }[]).length > 0 && (
+                    <span className="block pl-1 text-xs text-muted/80">
+                      {(i.optionsJson as { name: string }[]).map((o) => o.name).join(' · ')}
+                    </span>
+                  )}
+                </span>
                 <span className="font-medium">{eur(i.priceCents * i.qty)}</span>
               </li>
             ))}
