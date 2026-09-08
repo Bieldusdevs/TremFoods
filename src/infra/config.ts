@@ -13,6 +13,9 @@ const schema = z.object({
   STRIPE_SECRET_KEY: z.string().optional().default(''),
   STRIPE_WEBHOOK_SECRET: z.string().optional().default(''),
   REDIS_URL: z.string().optional().default(''),
+  VAPID_PUBLIC_KEY: z.string().optional().default(''),
+  VAPID_PRIVATE_KEY: z.string().optional().default(''),
+  VAPID_SUBJECT: z.string().optional().default('mailto:ola@tremfood.pt'),
 });
 
 const parsed = schema.safeParse(process.env);

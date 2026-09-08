@@ -20,6 +20,7 @@ model User {
   sessions        Session[]
   tokens          VerificationToken[]
   orders          Order[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Session {
@@ -177,4 +178,27 @@ model AuditLog {
 model Counter {
   id    Int @id
   value Int @default(0)
+}
+
+
+// Subscrições Web Push (estado de pedidos). O endpoint é a chave — em browsers
+// diferentes há endpoints distintos; ao desinstalar, o fornecedor devolve 404/410.
+model PushSubscription {
+  id         String   @id @default(cuid())
+  endpoint   String   @unique
+  keysP256dh String
+  keysAuth   String
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderNumber String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([orderNumber])
+}
+
+// Configurações chave-valor da loja (ex.: interrutor de encerramento manual).
+model Setting {
+  key   String @id
+  value String
 }

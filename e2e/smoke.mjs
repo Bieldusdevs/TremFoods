@@ -17,6 +17,9 @@ const fail = (name, extra = '') => {
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } }); // iPhone 12/13/14
 const adminCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+// Os testes correm com consentimento de cookies já dado (banner não bloqueia cliques).
+await ctx.addInitScript(() => localStorage.setItem('tf-cookie-consent', 'all'));
+await adminCtx.addInitScript(() => localStorage.setItem('tf-cookie-consent', 'all'));
 const page = await ctx.newPage();
 page.setDefaultTimeout(15000);
 
@@ -105,6 +108,9 @@ try {
   (await page.locator('body').textContent()).includes('Estado do pedido')
     ? ok('página do pedido com timeline')
     : fail('página do pedido');
+  await page.getByRole('button', { name: 'Ativar notificações' }).isVisible()
+    ? ok('toggle de notificações push visível')
+    : fail('toggle push');
 
   step('7. Acompanhamento público');
   await page.goto(`${BASE}/rastreamento`, { waitUntil: 'domcontentloaded' });
@@ -123,6 +129,13 @@ try {
   await admin.getByRole('button', { name: 'Iniciar sessão' }).click();
   await admin.waitForURL(`${BASE}/admin`, { timeout: 15000 });
   ok('admin entra no painel');
+
+  // Métricas: o dashboard carrega e mostra o pedido recém-criado.
+  await admin.goto(`${BASE}/admin/dashboard`, { waitUntil: 'domcontentloaded' });
+  (await admin.locator('body').textContent()).includes('Receita — últimos 14 dias') ? ok('dashboard de métricas carrega') : fail('dashboard métricas');
+  (await admin.locator('body').textContent()).includes(orderNumber) ? ok(`dashboard mostra ${orderNumber}`) : fail('dashboard pedido visível');
+  await admin.goto(`${BASE}/admin`, { waitUntil: 'domcontentloaded' });
+
   const card = admin.locator('article', { hasText: orderNumber });
   await card.isVisible() ? ok('pedido aparece no painel') : fail('pedido no painel');
   await card.getByRole('button', { name: 'Iniciar preparação' }).click();
