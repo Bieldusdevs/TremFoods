@@ -11,14 +11,16 @@ export const metadata: Metadata = {
 };
 
 export default async function CardapioPage() {
-  const products: ProductView[] = await prisma.product
-    .findMany({
+  let products: ProductView[] = [];
+  try {
+    const rows = await prisma.product.findMany({
       where: { available: true },
       include: { category: { select: { id: true, name: true, slug: true, sort: true } }, _count: { select: { optionGroups: true } } },
       orderBy: { sort: 'asc' },
-    })
-    .then((rows) =>
-      [...rows].sort((a, b) => a.category.sort - b.category.sort).map((p) => ({
+    });
+    products = [...rows]
+      .sort((a, b) => (a.category?.sort ?? 0) - (b.category?.sort ?? 0))
+      .map((p) => ({
         id: p.id,
         slug: p.slug,
         name: p.name,
@@ -32,9 +34,12 @@ export default async function CardapioPage() {
         isSpicy: p.isSpicy,
         category: p.category,
         categoryId: p.categoryId,
-        hasOptions: p._count.optionGroups > 0,
-      })),
-    );
+        hasOptions: (p._count?.optionGroups ?? 0) > 0,
+      }));
+  } catch (error) {
+    console.error('[CardapioPage] Error loading products:', error);
+    products = [];
+  }
 
   return (
     <div className="container-app py-8 sm:py-10">

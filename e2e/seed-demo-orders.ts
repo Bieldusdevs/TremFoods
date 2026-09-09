@@ -17,12 +17,12 @@ const demoUsers = await Promise.all(
 );
 const demoUserId = (i: number) => demoUsers[i % demoUsers.length];
 const [xSalada, xFrango, bacon, picanha, kibe, torresmo] = [
-  products.find((p) => p.name.includes('X-Salada')),
-  products.find((p) => p.name.includes('X-Frango')),
-  products.find((p) => p.name.includes('Bacon')),
-  products.find((p) => p.name.includes('Picanha')),
-  products.find((p) => p.name.includes('Kibe')),
-  products.find((p) => p.name.includes('Torresmo')),
+  products.find((p: { name: string }) => p.name.includes('X-Salada')),
+  products.find((p: { name: string }) => p.name.includes('X-Frango')),
+  products.find((p: { name: string }) => p.name.includes('Bacon')),
+  products.find((p: { name: string }) => p.name.includes('Picanha')),
+  products.find((p: { name: string }) => p.name.includes('Kibe')),
+  products.find((p: { name: string }) => p.name.includes('Torresmo')),
 ];
 
 const picked = (dayOffset: number, hour: number, min: number) => {

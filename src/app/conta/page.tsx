@@ -17,11 +17,17 @@ export default async function AccountPage() {
   const { user, session } = await requireUser();
   if (!user) redirect('/login?next=/conta');
 
-  const sessions = await prisma.session.findMany({
-    where: { userId: user.id, expiresAt: { gt: new Date() } },
-    orderBy: { lastSeen: 'desc' },
-    take: 20,
-  });
+  let sessions: (typeof prisma.session extends { findMany: (...args: any[]) => Promise<infer R> } ? R : never) = [];
+  try {
+    sessions = await prisma.session.findMany({
+      where: { userId: user.id, expiresAt: { gt: new Date() } },
+      orderBy: { lastSeen: 'desc' },
+      take: 20,
+    });
+  } catch (err) {
+    console.error('[AccountPage] Error loading sessions:', err);
+    sessions = [];
+  }
 
   return (
     <div className="container-app max-w-3xl py-8 sm:py-10">

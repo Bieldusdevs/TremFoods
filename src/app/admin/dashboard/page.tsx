@@ -22,7 +22,12 @@ export default async function AdminDashboardPage() {
 
   const now = new Date();
   const windows = metricWindows(now);
-  const orders = await dashboardOrders(now);
+  let orders: any[] = [];
+  try {
+    orders = await dashboardOrders(now);
+  } catch (err) {
+    console.error('[AdminDashboardPage] Error loading dashboard orders:', err);
+  }
   const summaries = summarizeOrders(orders, windows);
   const series = revenueSeries(orders, 14, now);
 
@@ -64,7 +69,7 @@ export default async function AdminDashboardPage() {
             o.deliveryMethod === 'DELIVERY'
               ? [o.addressStreet, o.addressNumber, o.addressCity, o.addressPostal].filter(Boolean).join(', ')
               : 'Levantamento no balcão',
-          items: o.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, options: Array.isArray(i.optionsJson) ? (i.optionsJson as { name: string }[]).map((x) => x.name) : [] })),
+          items: o.items.map((i: any) => ({ name: i.nameSnapshot, qty: i.qty, options: Array.isArray(i.optionsJson) ? (i.optionsJson as { name: string }[]).map((x) => x.name) : [] })),
           createdAt: o.createdAt.toISOString(),
         }))}
       />

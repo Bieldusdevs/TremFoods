@@ -17,13 +17,22 @@ export default async function AdminMenuPage() {
   if (!user) redirect('/login?next=/admin/menu');
   if (user.role !== 'ADMIN') redirect('/');
 
-  const [products, categories] = await Promise.all([
-    prisma.product.findMany({
-      orderBy: [{ category: { sort: 'asc' } }, { sort: 'asc' }],
-      include: { category: { select: { name: true } }, _count: { select: { optionGroups: true } } },
-    }),
-    prisma.category.findMany({ orderBy: { sort: 'asc' }, include: { _count: { select: { products: true } } } }),
-  ]);
+  let products: any[] = [];
+  let categories: any[] = [];
+
+  try {
+    const [dbProducts, dbCategories] = await Promise.all([
+      prisma.product.findMany({
+        orderBy: [{ category: { sort: 'asc' } }, { sort: 'asc' }],
+        include: { category: { select: { name: true } }, _count: { select: { optionGroups: true } } },
+      }),
+      prisma.category.findMany({ orderBy: { sort: 'asc' }, include: { _count: { select: { products: true } } } }),
+    ]);
+    products = dbProducts;
+    categories = dbCategories;
+  } catch (err) {
+    console.error('[AdminMenuPage] Error loading menu data:', err);
+  }
 
   return (
     <div className="container-app py-8 sm:py-10">

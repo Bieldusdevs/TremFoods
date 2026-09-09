@@ -25,10 +25,16 @@ export default async function OrderDetailPage({ params }: { params: { number: st
   const { user } = await requireUser();
   if (!user) notFound();
 
-  const order = await prisma.order.findFirst({
-    where: { number: params.number, userId: user.id },
-    include: { items: true, events: { orderBy: { createdAt: 'asc' } } },
-  });
+  let order = null;
+  try {
+    order = await prisma.order.findFirst({
+      where: { number: params.number, userId: user.id },
+      include: { items: true, events: { orderBy: { createdAt: 'asc' } } },
+    });
+  } catch (err) {
+    console.error('[OrderDetailPage] Error loading order:', err);
+    notFound();
+  }
   if (!order) notFound();
 
   const meta = LIFECYCLE[order.status];
