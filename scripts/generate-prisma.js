@@ -108,6 +108,13 @@ async function generateAll() {
   const datasources = config.datasources;
   const outputDir = path.resolve(__dirname, '../node_modules/.prisma/client');
 
+  const genBuildPath = path.resolve(__dirname, '../node_modules/@prisma/client/generator-build/index.js');
+  let genBuildCode = fs.readFileSync(genBuildPath, 'utf8');
+  if (!genBuildCode.includes('generateClient: () => generateClient')) {
+    genBuildCode = genBuildCode.replace('dmmfToTypes: () => dmmfToTypes,', 'generateClient: () => generateClient,\n  dmmfToTypes: () => dmmfToTypes,');
+    fs.writeFileSync(genBuildPath, genBuildCode, 'utf8');
+  }
+
   const { generateClient } = require('../node_modules/@prisma/client/generator-build/index.js');
   await generateClient({
     datamodel,
