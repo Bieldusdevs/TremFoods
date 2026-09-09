@@ -409,7 +409,7 @@ const products: ProductSeed[] = [
     name: 'Coca-Cola Normal (33cl)',
     category: 'bebidas',
     priceCents: 200,
-    image: '/img/items/bebidas.jpg',
+    image: '/img/items/coca-cola-normal.png',
     description: 'Refrigerante Coca-Cola em lata 33cl servida bem fresca.',
   },
   {
@@ -417,7 +417,7 @@ const products: ProductSeed[] = [
     name: 'Coca-Cola Sem Açúcar (33cl)',
     category: 'bebidas',
     priceCents: 200,
-    image: '/img/items/bebidas.jpg',
+    image: '/img/items/coca-cola-sem-acucar.png',
     description: 'Refrigerante Coca-Cola Zero sem açúcar em lata 33cl.',
   },
   {
@@ -425,7 +425,7 @@ const products: ProductSeed[] = [
     name: 'Guaraná Antarctica (33cl)',
     category: 'bebidas',
     priceCents: 220,
-    image: '/img/items/bebidas.jpg',
+    image: '/img/items/guarana-antarctica.png',
     description: 'Original do Brasil, refrigerante Guaraná Antarctica em lata 33cl.',
   },
   {
@@ -433,7 +433,7 @@ const products: ProductSeed[] = [
     name: 'Água Mineral (50cl)',
     category: 'bebidas',
     priceCents: 150,
-    image: '/img/items/bebidas.jpg',
+    image: '/img/items/agua-mineral.png',
     description: 'Garrafa de água mineral natural 50cl.',
   },
   {
@@ -441,7 +441,7 @@ const products: ProductSeed[] = [
     name: 'Cerveja Super Bock (33cl)',
     category: 'bebidas',
     priceCents: 220,
-    image: '/img/items/bebidas.jpg',
+    image: '/img/items/super-bock.png',
     description: 'Cerveja lager portuguesa Super Bock fresca em garrafa 33cl.',
   },
   {
@@ -449,7 +449,7 @@ const products: ProductSeed[] = [
     name: 'Cerveja Sagres (33cl)',
     category: 'bebidas',
     priceCents: 220,
-    image: '/img/items/bebidas.jpg',
+    image: '/img/items/sagres.png',
     description: 'Cerveja lager portuguesa Sagres fresca em garrafa 33cl.',
   },
   {
@@ -457,7 +457,7 @@ const products: ProductSeed[] = [
     name: 'Cerveja Heineken (33cl)',
     category: 'bebidas',
     priceCents: 280,
-    image: '/img/items/bebidas.jpg',
+    image: '/img/items/heineken.png',
     description: 'Cerveja lager Heineken fresca em garrafa 33cl.',
   },
 ];
