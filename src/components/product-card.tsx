@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Flame, Leaf, Plus } from 'lucide-react';
+import { Box, Flame, Leaf, Plus } from 'lucide-react';
 import { AddToCart } from './add-to-cart';
 import type { Product } from '@prisma/client';
 import { eur } from '@/domains/shared-kernel/money';
@@ -20,6 +20,9 @@ export function ProductCard({ product, hasOptions = false }: { product: Product;
           {product.isNew && <span className="chip bg-[#17150F]/90 text-white">Novo</span>}
           {product.isVegetarian && (
             <span className="chip bg-surface/95 text-success"><Leaf className="h-3 w-3" /> Vegetariano</span>
+          )}
+          {product.modelUrl && (
+            <span className="chip bg-surface/95 text-ink"><Box className="h-3 w-3" /> Ver na mesa</span>
           )}
           {product.isSpicy && (
             <span className="chip bg-surface/95 text-danger"><Flame className="h-3 w-3" /> Picante</span>

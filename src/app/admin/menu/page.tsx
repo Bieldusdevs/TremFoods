@@ -62,6 +62,9 @@ export default async function AdminMenuPage() {
           isSpicy: p.isSpicy,
           sort: p.sort,
           available: p.available,
+          modelUrl: p.modelUrl ?? null,
+          iosModelUrl: p.iosModelUrl ?? null,
+          dims: p.dims ?? null,
           hasOptions: p._count.optionGroups > 0,
         }))}
         initialCategories={categories.map((c) => ({

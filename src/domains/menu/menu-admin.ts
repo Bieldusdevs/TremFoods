@@ -1,4 +1,13 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/infra/db';
+
+export type Dims = { w: number; h: number; d: number };
+
+// Campos 3D/AR são opcionais; `dims: null` limpa o JSON no Prisma.
+function withModelFields<T extends { dims?: Dims | null }>(data: T) {
+  const { dims, ...rest } = data;
+  return dims === undefined ? rest : { ...rest, dims: dims === null ? Prisma.JsonNull : dims };
+}
 
 export type ProductInput = {
   name: string;
@@ -13,6 +22,9 @@ export type ProductInput = {
   isSpicy: boolean;
   sort: number;
   available: boolean;
+  modelUrl?: string | null;
+  iosModelUrl?: string | null;
+  dims?: Dims | null;
 };
 
 export function slugify(value: string): string {
@@ -42,7 +54,7 @@ export async function createProduct(data: ProductInput): Promise<CreateResult> {
   const slug = data.slug?.trim() ? data.slug : await uniqueSlug(slugify(data.name));
   const clash = await prisma.product.findUnique({ where: { slug } });
   if (clash) return { error: 'SLUG_TAKEN' };
-  const product = await prisma.product.create({ data: { ...data, slug } });
+  const product = await prisma.product.create({ data: { ...withModelFields(data), slug } });
   return { error: null, product };
 }
 
@@ -57,7 +69,7 @@ export async function updateProduct(id: string, data: Partial<ProductInput> & { 
     if (clash) return { error: 'SLUG_TAKEN' };
   }
   const product = await prisma.product
-    .update({ where: { id }, data, select: { id: true, name: true, slug: true } })
+    .update({ where: { id }, data: withModelFields(data), select: { id: true, name: true, slug: true } })
     .catch(() => null);
   return product ? { error: null, product } : { error: 'NOT_FOUND' };
 }

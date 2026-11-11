@@ -9,11 +9,12 @@ const nextConfig = {
       "base-uri 'self'",
       "object-src 'none'",
       "frame-ancestors 'none'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://vercel.live https://va.vercel-scripts.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://vercel.live https://va.vercel-scripts.com https://www.gstatic.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://api.stripe.com https://vercel.live https://vitals.vercel-insights.com",
+      "connect-src 'self' blob: data: https://api.stripe.com https://vercel.live https://vitals.vercel-insights.com https://*.public.blob.vercel-storage.com https://vercel.com https://www.gstatic.com",
+      "worker-src 'self' blob:",
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://vercel.live",
       "form-action 'self' https://checkout.stripe.com",
     ].join('; ');
@@ -24,7 +25,7 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(), payment=(), xr-spatial-tracking=(self)' },
           { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
           { key: 'X-XSS-Protection', value: '0' },
           {

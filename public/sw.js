@@ -5,6 +5,7 @@
 const VERSION = 'trem-v2';
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
+const MODELS_CACHE = `${VERSION}-models`;
 
 const SHELL = ['/', '/cardapio', '/offline', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
 
@@ -33,6 +34,26 @@ self.addEventListener('fetch', (event) => {
 
   // Nunca armazenar em cache chamadas à API nem o service worker.
   if (url.pathname.startsWith('/api/') || url.pathname === '/sw.js') return;
+
+  // Modelos 3D (.glb/.usdz): CacheFirst, para abrirem rápido na segunda vez.
+  // Fora do precache (são pesados); guarda só respostas completas e limita a 60 itens.
+  if (/\.(glb|gltf|usdz)$/i.test(url.pathname) && !req.headers.has('range')) {
+    event.respondWith(
+      caches.open(MODELS_CACHE).then(async (cache) => {
+        const hit = await cache.match(req);
+        if (hit) return hit;
+        const res = await fetch(req);
+        if (res.status === 200) {
+          cache.put(req, res.clone()).then(async () => {
+            const keys = await cache.keys();
+            if (keys.length > 60) await cache.delete(keys[0]);
+          });
+        }
+        return res;
+      }),
+    );
+    return;
+  }
 
   // Imagens e fontes: stale-while-revalidate
   const isAsset = url.pathname.startsWith('/img/') || url.pathname.startsWith('/fonts/') || url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg') || url.pathname.endsWith('.webp') || url.pathname.endsWith('.woff2');

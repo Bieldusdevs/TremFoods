@@ -1,6 +1,16 @@
 import { z } from 'zod';
 import { cleanText } from '@/domains/shared-kernel/text';
 
+const urlField = z
+  .string()
+  .max(500)
+  .refine((v) => /^(https?:\/\/|\/)/.test(v), 'Modelo 3D: use um link http(s) ou um caminho /…');
+const dimsSchema = z.object({
+  w: z.number().min(0).max(500),
+  h: z.number().min(0).max(500),
+  d: z.number().min(0).max(500),
+});
+
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const productSchema = z.object({
@@ -16,6 +26,9 @@ export const productSchema = z.object({
   isSpicy: z.boolean().default(false),
   sort: z.number().int().min(0).max(999).default(0),
   available: z.boolean().default(true),
+  modelUrl: urlField.nullable().optional(),
+  iosModelUrl: urlField.nullable().optional(),
+  dims: dimsSchema.nullable().optional(),
 });
 
 // Patch explícito: sem `.default()`/`.partial()` — campos ausentes não podem
@@ -34,6 +47,9 @@ export const productPatchSchema = z
     isSpicy: z.boolean().optional(),
     sort: z.number().int().min(0).max(999).optional(),
     available: z.boolean().optional(),
+    modelUrl: urlField.nullable().optional(),
+    iosModelUrl: urlField.nullable().optional(),
+    dims: dimsSchema.nullable().optional(),
   })
   .refine((d) => Object.keys(d).length > 0, 'Sem alterações.');
 

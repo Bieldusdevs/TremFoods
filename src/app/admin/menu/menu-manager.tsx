@@ -1,21 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Plus, Trash2, Pencil, Save, Loader2, Link2, ImageIcon, X } from 'lucide-react';
 import { apiGet, apiPost, apiPatch, apiDelete, apiPut } from '@/infra/http-client';
 import { eur } from '@/domains/shared-kernel/money';
+import { ModelEditor, type ModelEditorHandle, type Dims } from './model-editor';
 
 type CategoryRow = { id: string; name: string; slug: string; description: string | null; sort: number; productsCount: number };
 type ProductRow = {
   id: string; name: string; slug: string; description: string; categoryId: string; category: string;
   priceCents: number; image: string; isFeatured: boolean; isNew: boolean; isVegetarian: boolean; isSpicy: boolean;
   sort: number; available: boolean; hasOptions: boolean;
+  modelUrl: string | null; iosModelUrl: string | null; dims: Dims | null;
 };
 type OptionDraft = { name: string; priceCents: number; available: boolean; sort: number };
 type GroupDraft = { name: string; required: boolean; multiple: boolean; maxSelect: number | null; sort: number; options: OptionDraft[] };
 
 const emptyProduct = (categoryId: string): ProductRow => ({
-  id: '', name: '', slug: '', description: '', categoryId, category: '', priceCents: 0, image: '', isFeatured: false, isNew: false, isVegetarian: false, isSpicy: false, sort: 0, available: true, hasOptions: false,
+  id: '', name: '', slug: '', description: '', categoryId, category: '', priceCents: 0, image: '', isFeatured: false, isNew: false, isVegetarian: false, isSpicy: false, sort: 0, available: true, hasOptions: false, modelUrl: null, iosModelUrl: null, dims: null,
 });
 
 export function MenuManager({ initialProducts, initialCategories }: { initialProducts: ProductRow[]; initialCategories: CategoryRow[] }) {
@@ -28,6 +30,7 @@ export function MenuManager({ initialProducts, initialCategories }: { initialPro
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const modelEditor = useRef<ModelEditorHandle>(null);
 
   const reload = async () => {
     const [p, c] = await Promise.all([apiGet<{ products: ProductRow[] }>('/api/admin/products'), apiGet<{ categories: CategoryRow[] }>('/api/admin/categories')]);
@@ -57,9 +60,18 @@ export function MenuManager({ initialProducts, initialCategories }: { initialPro
     setError(null);
     setNotice(null);
     try {
+      // Envia o modelo 3D (e a foto automática, se o prato não tiver foto) antes de guardar.
+      let model = { modelUrl: draft.modelUrl, iosModelUrl: draft.iosModelUrl, dims: draft.dims, image: draft.image };
+      try {
+        if (modelEditor.current) model = await modelEditor.current.commit(draft.image, draft.slug);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Não foi possível enviar o modelo 3D.');
+        return;
+      }
       const body = {
+        modelUrl: model.modelUrl || null, iosModelUrl: model.iosModelUrl || null, dims: model.modelUrl ? model.dims : null,
         name: draft.name, slug: draft.slug || undefined, priceCents: draft.priceCents, categoryId: draft.categoryId,
-        image: draft.image, description: draft.description, isFeatured: draft.isFeatured, isNew: draft.isNew,
+        image: model.image, description: draft.description, isFeatured: draft.isFeatured, isNew: draft.isNew,
         isVegetarian: draft.isVegetarian, isSpicy: draft.isSpicy, sort: draft.sort, available: draft.available,
       };
       const r = draft.id ? await apiPatch(`/api/admin/products/${draft.id}`, body) : await apiPost('/api/admin/products', body);
@@ -67,12 +79,13 @@ export function MenuManager({ initialProducts, initialCategories }: { initialPro
         setError(r.data.error?.message ?? 'Não foi possível guardar.');
         return;
       }
+      setDraft((d) => (d ? { ...d, ...model } : d));
       setNotice(draft.id ? 'Produto atualizado.' : 'Produto criado.');
       await reload();
       if (!draft.id) {
         const created = products.find((x) => x.name === draft.name);
         const fresh = r.data as unknown as { product: { id: string } };
-        if (fresh.product?.id) await openProduct({ ...draft, id: fresh.product.id, hasOptions: false, category: categories.find((c) => c.id === draft.categoryId)?.name ?? '' });
+        if (fresh.product?.id) await openProduct({ ...draft, ...model, id: fresh.product.id, hasOptions: false, category: categories.find((c) => c.id === draft.categoryId)?.name ?? '' });
       }
     } finally {
       setBusy(false);
@@ -246,7 +259,7 @@ export function MenuManager({ initialProducts, initialCategories }: { initialPro
                 <div>
                   <label className="label" htmlFor="p-image">Foto (URL)</label>
                   <div className="flex items-center gap-2">
-                    <input id="p-image" className="input" value={draft.image} onChange={(e) => set('image', e.target.value)} placeholder="https://… ou /img/items/…" />
+                    <input id="p-image" className="input" value={draft.image} onChange={(e) => set('image', e.target.value)} placeholder="https://… ou /img/items/… (vazio = foto automática do 3D)" />
                     {draft.image && <a href={draft.image} target="_blank" rel="noreferrer" className="btn-secondary shrink-0 p-2.5" aria-label="Abrir imagem"><Link2 className="h-4 w-4" /></a>}
                   </div>
                 </div>
@@ -275,6 +288,14 @@ export function MenuManager({ initialProducts, initialCategories }: { initialPro
                   </label>
                 ))}
               </div>
+
+              <ModelEditor
+                key={draft.id || 'novo'}
+                ref={modelEditor}
+                name={draft.name}
+                value={{ modelUrl: draft.modelUrl, iosModelUrl: draft.iosModelUrl, dims: draft.dims, image: draft.image }}
+                onChange={(patch) => setDraft((d) => (d ? { ...d, ...patch } : d))}
+              />
 
               <button onClick={saveProduct} disabled={busy || !draft.name || !draft.categoryId} className="btn-primary">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar produto
