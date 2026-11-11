@@ -76,6 +76,10 @@ model Product {
   available    Boolean @default(true)
   sort         Int      @default(0)
   createdAt    DateTime @default(now())
+  // 3D / realidade aumentada: .glb em metros (1 unidade = 1 m), base em y = 0
+  modelUrl     String?
+  iosModelUrl  String? // .usdz opcional (o iPhone gera sozinho a partir do .glb)
+  dims         Json?   // { w, h, d } em cm
 
   category     Category       @relation(fields: [categoryId], references: [id])
   cartItems    CartItem[]

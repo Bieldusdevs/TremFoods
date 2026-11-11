@@ -34,6 +34,9 @@ export async function GET() {
       isSpicy: p.isSpicy,
       sort: p.sort,
       available: p.available,
+      modelUrl: p.modelUrl,
+      iosModelUrl: p.iosModelUrl,
+      dims: p.dims,
       hasOptions: p._count.optionGroups > 0,
     })),
   });

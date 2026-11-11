@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Leaf, Flame, Clock, Bike, ShoppingBag } from 'lucide-react';
 import { AddToCart } from '@/components/add-to-cart';
 import { ProductPurchase } from './product-purchase';
+import { DishAr } from '@/components/dish-ar';
 import { prisma } from '@/infra/db';
 import { eur } from '@/domains/shared-kernel/money';
 import { DELIVERY_MINUTES, PICKUP_MINUTES } from '@/domains/delivery/delivery-policy';
@@ -61,6 +62,16 @@ export default async function ProductPage({ params }: { params: { slug: string }
             {product.isSpicy && <span className="chip bg-danger/10 text-danger"><Flame className="h-3.5 w-3.5" /> Picante</span>}
             {product.isNew && <span className="chip bg-ink/5 text-ink/70">Novo</span>}
           </div>
+
+          {product.modelUrl && (
+            <DishAr
+              name={product.name}
+              modelUrl={product.modelUrl}
+              iosModelUrl={product.iosModelUrl}
+              image={product.image}
+              dims={product.dims as { w: number; h: number; d: number } | null}
+            />
+          )}
 
           <div className="mt-6 flex items-baseline gap-2">
             <span className="font-display text-3xl font-extrabold">{eur(product.priceCents)}</span>
